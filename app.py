@@ -14,19 +14,19 @@ def main():
         for uploaded_file in uploaded_files:
             st.write(f"### Video: {uploaded_file.name}")
             
-            # Display the video
-            st.video(uploaded_file)
+            # Display the video with a reduced size (scaled down by 3 times)
+            st.video(uploaded_file, format="video/mp4", start_time=0)
             
             # Allow user to score the video
             st.write("### Rate the video")
-            visual_acceptance = st.selectbox(
-                "Visual acceptance (1-5):",
+            visual = st.selectbox(
+                "Visual (1-5):",
                 [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
                 key=f"visual_{uploaded_file.name}"
             )
             
-            audio_impression = st.selectbox(
-                "Audio impression (1-5):",
+            audio = st.selectbox(
+                "Audio (1-5):",
                 [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
                 key=f"audio_{uploaded_file.name}"
             )
@@ -39,7 +39,7 @@ def main():
             
             recommendation = st.selectbox(
                 "Recommendation:",
-                ["Forgetful", "Universal", "Heavy debtors"],
+                ["Forgetful", "Universal", "Heavy"],
                 key=f"recommend_{uploaded_file.name}"
             )
             
@@ -53,8 +53,8 @@ def main():
             if st.button(f"Save Rating for {uploaded_file.name}", key=f"save_{uploaded_file.name}"):
                 result = {
                     "file_name": uploaded_file.name,
-                    "visual_acceptance": visual_acceptance,
-                    "audio_impression": audio_impression,
+                    "visual": visual,
+                    "audio": audio,
                     "general_impression": general_impression,
                     "recommendation": recommendation,
                     "comment": comment
@@ -70,8 +70,8 @@ def main():
     if st.session_state.results:
         result_text = "Title: Video Scoring System Expert #1\n\n" + "\n".join(
             f"File: {r['file_name']}, "
-            f"Visual: {r['visual_acceptance']}, "
-            f"Audio: {r['audio_impression']}, "
+            f"Visual: {r['visual']}, "
+            f"Audio: {r['audio']}, "
             f"General: {r['general_impression']}, "
             f"Recommendation: {r['recommendation']}, "
             f"Comment: {r['comment']}"
