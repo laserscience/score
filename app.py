@@ -1,8 +1,10 @@
 import streamlit as st
 
-# Initialize session state for uploaded files
+# Initialize session state
 if "uploaded_files" not in st.session_state:
     st.session_state.uploaded_files = []
+if "current_index" not in st.session_state:
+    st.session_state.current_index = 0
 if "results" not in st.session_state:
     st.session_state.results = []
 
@@ -13,9 +15,15 @@ def add_uploaded_files(new_files):
         if file.name not in existing_files:
             st.session_state.uploaded_files.append(file)
 
-# Function to display a single video
-def display_video(file, width=320, height=240):
-    st.video(file, format="video/mp4", start_time=0)
+# Function to move to the next video
+def next_video():
+    if st.session_state.current_index < len(st.session_state.uploaded_files) - 1:
+        st.session_state.current_index += 1
+
+# Function to move to the previous video
+def prev_video():
+    if st.session_state.current_index > 0:
+        st.session_state.current_index -= 1
 
 def main():
     st.title("Video Scoring System Expert #1")
@@ -29,54 +37,64 @@ def main():
         st.warning("No videos uploaded. Please upload MP4 video files.")
         return
 
-    # Display all uploaded videos with ratings
-    for i, uploaded_file in enumerate(st.session_state.uploaded_files):
-        st.write(f"### Video {i + 1}: {uploaded_file.name}")
-        display_video(uploaded_file, width=320, height=240)
+    # Get the current video
+    current_video = st.session_state.uploaded_files[st.session_state.current_index]
 
-        # Rating controls for each video
-        visual = st.selectbox(
-            f"Visual (1-5) for {uploaded_file.name}:",
-            [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
-            key=f"visual_{uploaded_file.name}"
-        )
-        
-        audio = st.selectbox(
-            f"Audio (1-5) for {uploaded_file.name}:",
-            [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
-            key=f"audio_{uploaded_file.name}"
-        )
-        
-        general_impression = st.selectbox(
-            f"General impression (1-5) for {uploaded_file.name}:",
-            [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
-            key=f"general_{uploaded_file.name}"
-        )
-        
-        recommendation = st.selectbox(
-            f"Recommendation for {uploaded_file.name}:",
-            ["Forgetful", "Universal", "Heavy"],
-            key=f"recommend_{uploaded_file.name}"
-        )
-        
-        comment = st.text_area(
-            f"Short Comment for {uploaded_file.name}:",
-            placeholder="Write a brief comment about this video...",
-            key=f"comment_{uploaded_file.name}"
-        )
+    # Display the current video
+    st.write(f"### Now Playing: {current_video.name} ({st.session_state.current_index + 1}/{len(st.session_state.uploaded_files)})")
+    st.video(current_video, format="video/mp4", start_time=0)
 
-        # Save rating for each video
-        if st.button(f"Save Rating for {uploaded_file.name}"):
-            result = {
-                "file_name": uploaded_file.name,
-                "visual": visual,
-                "audio": audio,
-                "general_impression": general_impression,
-                "recommendation": recommendation,
-                "comment": comment
-            }
-            st.session_state.results.append(result)
-            st.success(f"Rating for {uploaded_file.name} saved!")
+    # Video rating controls
+    st.write("### Rate the video")
+    visual = st.selectbox(
+        "Visual (1-5):",
+        [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
+        key=f"visual_{current_video.name}"
+    )
+    
+    audio = st.selectbox(
+        "Audio (1-5):",
+        [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
+        key=f"audio_{current_video.name}"
+    )
+    
+    general_impression = st.selectbox(
+        "General impression (1-5):",
+        [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
+        key=f"general_{current_video.name}"
+    )
+    
+    recommendation = st.selectbox(
+        "Recommendation:",
+        ["Forgetful", "Universal", "Heavy"],
+        key=f"recommend_{current_video.name}"
+    )
+    
+    comment = st.text_area(
+        f"Short Comment for {current_video.name}:",
+        placeholder="Write a brief comment about this video...",
+        key=f"comment_{current_video.name}"
+    )
+
+    # Save button
+    if st.button("Save Rating"):
+        result = {
+            "file_name": current_video.name,
+            "visual": visual,
+            "audio": audio,
+            "general_impression": general_impression,
+            "recommendation": recommendation,
+            "comment": comment
+        }
+        st.session_state.results.append(result)
+        st.success(f"Rating for {current_video.name} saved!")
+
+    # Navigation buttons
+    col1, col2 = st.columns(2)
+    with col1:
+        st.button("Previous", on_click=prev_video, disabled=(st.session_state.current_index == 0))
+    with col2:
+        st.button("Next", on_click=next_video, disabled=(st.session_state.current_index == len(st.session_state.uploaded_files) - 1))
 
     # Download results
     if st.session_state.results:
