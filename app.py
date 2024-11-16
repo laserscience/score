@@ -1,28 +1,16 @@
-import os
 import streamlit as st
 
-# Initialize session state for video navigation
+# Initialize session state for uploaded files
+if "uploaded_files" not in st.session_state:
+    st.session_state.uploaded_files = []
 if "current_index" not in st.session_state:
     st.session_state.current_index = 0
 if "results" not in st.session_state:
     st.session_state.results = []
 
-# Function to fetch video files from a folder
-def get_video_files(folder_path="videos"):
-    try:
-        # Ensure folder exists
-        if not os.path.exists(folder_path):
-            st.error(f"Folder '{folder_path}' does not exist.")
-            return []
-        # Get all MP4 files
-        return [f for f in os.listdir(folder_path) if f.endswith(".mp4")]
-    except Exception as e:
-        st.error(f"Error reading folder: {str(e)}")
-        return []
-
 # Function to move to the next video
 def next_video():
-    if st.session_state.current_index < len(st.session_state.video_files) - 1:
+    if st.session_state.current_index < len(st.session_state.uploaded_files) - 1:
         st.session_state.current_index += 1
 
 # Function to move to the previous video
@@ -33,66 +21,66 @@ def prev_video():
 def main():
     st.title("Video Scoring System Expert #1")
 
-    # Load video files
-    video_folder = "videos"  # Path to your video folder
-    st.session_state.video_files = get_video_files(video_folder)
-
-    if not st.session_state.video_files:
-        st.warning("No videos found in the folder.")
+    # File uploader widget to allow uploading multiple video files
+    new_uploaded_files = st.file_uploader("Upload videos", type=["mp4"], accept_multiple_files=True)
+    if new_uploaded_files:
+        st.session_state.uploaded_files.extend(new_uploaded_files)
+    
+    if not st.session_state.uploaded_files:
+        st.warning("No videos uploaded. Please upload MP4 video files.")
         return
 
-    # Display list of videos
-    st.write("### List of Videos")
-    for i, file in enumerate(st.session_state.video_files):
-        if i == st.session_state.current_index:
-            st.write(f"**➡️ {i + 1}. {file}**")  # Highlight the current video
-        else:
-            st.write(f"{i + 1}. {file}")
+    # Current video index
+    current_video = st.session_state.uploaded_files[st.session_state.current_index]
 
-    # Get the current video file
-    current_video = st.session_state.video_files[st.session_state.current_index]
-    current_video_path = os.path.join(video_folder, current_video)
+    # Display list of uploaded videos
+    st.write("### List of Uploaded Videos")
+    for i, file in enumerate(st.session_state.uploaded_files):
+        if i == st.session_state.current_index:
+            st.write(f"**➡️ {i + 1}. {file.name}**")  # Highlight the current video
+        else:
+            st.write(f"{i + 1}. {file.name}")
 
     # Display the current video
-    st.write(f"### Now Playing: {current_video}")
-    st.video(current_video_path)
+    st.write(f"### Now Playing: {current_video.name}")
+    st.video(current_video)
 
     # Video rating controls
     st.write("### Rate the video")
     visual = st.selectbox(
         "Visual (1-5):",
         [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
-        key=f"visual_{current_video}"
+        key=f"visual_{current_video.name}"
     )
     
     audio = st.selectbox(
         "Audio (1-5):",
         [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
-        key=f"audio_{current_video}"
+        key=f"audio_{current_video.name}"
     )
     
     general_impression = st.selectbox(
         "General impression (1-5):",
         [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
-        key=f"general_{current_video}"
+        key=f"general_{current_video.name}"
     )
     
     recommendation = st.selectbox(
         "Recommendation:",
         ["Forgetful", "Universal", "Heavy"],
-        key=f"recommend_{current_video}"
+        key=f"recommend_{current_video.name}"
     )
     
     comment = st.text_area(
-        f"Short Comment for {current_video}:",
+        f"Short Comment for {current_video.name}:",
         placeholder="Write a brief comment about this video...",
-        key=f"comment_{current_video}"
+        key=f"comment_{current_video.name}"
     )
     
     # Save button
     if st.button("Save Rating"):
         result = {
-            "file_name": current_video,
+            "file_name": current_video.name,
             "visual": visual,
             "audio": audio,
             "general_impression": general_impression,
@@ -100,14 +88,14 @@ def main():
             "comment": comment
         }
         st.session_state.results.append(result)
-        st.success(f"Rating for {current_video} saved!")
+        st.success(f"Rating for {current_video.name} saved!")
 
     # Navigation buttons
     col1, col2 = st.columns(2)
     with col1:
         st.button("Previous", on_click=prev_video, disabled=(st.session_state.current_index == 0))
     with col2:
-        st.button("Next", on_click=next_video, disabled=(st.session_state.current_index == len(st.session_state.video_files) - 1))
+        st.button("Next", on_click=next_video, disabled=(st.session_state.current_index == len(st.session_state.uploaded_files) - 1))
 
     # Download results
     if st.session_state.results:
