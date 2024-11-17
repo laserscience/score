@@ -40,56 +40,61 @@ def main():
     # Get the current video
     current_video = st.session_state.uploaded_files[st.session_state.current_index]
 
-    # Display the current video
-    st.write(f"### Now Playing: {current_video.name} ({st.session_state.current_index + 1}/{len(st.session_state.uploaded_files)})")
-    st.video(current_video, format="video/mp4", start_time=0)
+    # Layout with video on the left and scoring on the right
+    col1, col2 = st.columns([3, 2])  # Adjust column widths as needed
 
-    # Video rating controls
-    st.write("### Rate the video")
-    visual = st.selectbox(
-        "Visual (1-5):",
-        [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
-        key=f"visual_{current_video.name}"
-    )
-    
-    audio = st.selectbox(
-        "Audio (1-5):",
-        [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
-        key=f"audio_{current_video.name}"
-    )
-    
-    general_impression = st.selectbox(
-        "General impression (1-5):",
-        [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
-        key=f"general_{current_video.name}"
-    )
-    
-    recommendation = st.selectbox(
-        "Recommendation:",
-        ["Forgetful", "Universal", "Heavy"],
-        key=f"recommend_{current_video.name}"
-    )
-    
-    comment = st.text_area(
-        f"Short Comment for {current_video.name}:",
-        placeholder="Write a brief comment about this video...",
-        key=f"comment_{current_video.name}"
-    )
+    with col1:
+        # Display the current video
+        st.write(f"### Now Playing: {current_video.name} ({st.session_state.current_index + 1}/{len(st.session_state.uploaded_files)})")
+        st.video(current_video, format="video/mp4", start_time=0)
 
-    # Save button
-    if st.button("Save Rating"):
-        result = {
-            "file_name": current_video.name,
-            "visual": visual,
-            "audio": audio,
-            "general_impression": general_impression,
-            "recommendation": recommendation,
-            "comment": comment
-        }
-        st.session_state.results.append(result)
-        st.success(f"Rating for {current_video.name} saved!")
+    with col2:
+        # Video rating controls
+        st.write("### Rate the Video")
+        visual = st.selectbox(
+            "Visual (1-5):",
+            [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
+            key=f"visual_{current_video.name}"
+        )
+        
+        audio = st.selectbox(
+            "Audio (1-5):",
+            [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
+            key=f"audio_{current_video.name}"
+        )
+        
+        general_impression = st.selectbox(
+            "General impression (1-5):",
+            [5, 4, 3, 2, 1],  # 1 (low), 5 (high)
+            key=f"general_{current_video.name}"
+        )
+        
+        recommendation = st.selectbox(
+            "Recommendation:",
+            ["Forgetful", "Universal", "Heavy"],
+            key=f"recommend_{current_video.name}"
+        )
+        
+        comment = st.text_area(
+            f"Short Comment for {current_video.name}:",
+            placeholder="Write a brief comment about this video...",
+            key=f"comment_{current_video.name}"
+        )
 
-    # Navigation buttons
+        # Save button
+        if st.button("Save Rating"):
+            result = {
+                "file_name": current_video.name,
+                "visual": visual,
+                "audio": audio,
+                "general_impression": general_impression,
+                "recommendation": recommendation,
+                "comment": comment
+            }
+            st.session_state.results.append(result)
+            st.success(f"Rating for {current_video.name} saved!")
+
+    # Navigation buttons at the bottom
     col1, col2 = st.columns(2)
     with col1:
         st.button("Previous", on_click=prev_video, disabled=(st.session_state.current_index == 0))
